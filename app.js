@@ -1,5 +1,6 @@
 const canvas = document.getElementById('simCanvas');
 const ctx = canvas.getContext('2d');
+const appRoot = document.getElementById('appRoot');
 
 class Carga {
   constructor(x, y, q) {
@@ -47,6 +48,22 @@ let isDragging = false;
 let cargaArrastada = null;
 let ponteiroAtivoId = null;
 
+function aplicarModoLayoutViewport() {
+  const viewport = window.visualViewport;
+  const largura = viewport ? viewport.width : window.innerWidth;
+  const altura = viewport ? viewport.height : window.innerHeight;
+  const modoRetrato = largura < altura;
+
+  if (appRoot) {
+    appRoot.classList.toggle('viewport-portrait', modoRetrato);
+  }
+}
+
+function atualizarLayout() {
+  aplicarModoLayoutViewport();
+  ajustarCanvasAoLayout();
+}
+
 function ajustarCanvasAoLayout() {
   const rect = canvas.getBoundingClientRect();
   const novaLargura = Math.max(1, Math.floor(rect.width));
@@ -79,16 +96,16 @@ document.getElementById('toggleSensor').addEventListener('click', () => {
   document.getElementById('spanMultimetro').innerHTML = usarMultimetro ? 'Desativar Multímetro' : 'Ativar Multímetro';
 });
 
-window.addEventListener('resize', ajustarCanvasAoLayout);
+window.addEventListener('resize', atualizarLayout);
 
 if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', ajustarCanvasAoLayout);
-  window.visualViewport.addEventListener('scroll', ajustarCanvasAoLayout);
+  window.visualViewport.addEventListener('resize', atualizarLayout);
+  window.visualViewport.addEventListener('scroll', atualizarLayout);
 }
 
 if (typeof ResizeObserver !== 'undefined') {
   const painelUI = document.getElementById('ui');
-  const observer = new ResizeObserver(() => ajustarCanvasAoLayout());
+  const observer = new ResizeObserver(() => atualizarLayout());
   if (painelUI) observer.observe(painelUI);
   observer.observe(canvas);
 }
@@ -108,8 +125,8 @@ function renderizar() {
   requestAnimationFrame(renderizar);
 }
 
-// Inicia o motor com o canvas já dimensionado ao layout real
-ajustarCanvasAoLayout();
+// Inicia o motor com o layout e canvas dimensionados ao viewport real
+atualizarLayout();
 renderizar();
 
 ///////////////////////////////////////////////////////////////////////////////////

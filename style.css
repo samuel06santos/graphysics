@@ -2,9 +2,21 @@
   touch-action: none;
 }
 
-@media (max-width: 767px) {
-  #ui {
-	max-height: 45dvh;
-  }
+body.viewport-portrait {
+  flex-direction: column !important;
+}
+
+body.viewport-portrait #ui {
+  width: auto !important;
+  max-height: none;
+  height: calc(50dvh - 0.75rem) !important;
+  margin: 0.5rem 0.5rem 0.25rem 0.5rem !important;
+}
+
+body.viewport-portrait #simCanvas {
+  flex: none !important;
+  min-height: 0;
+  height: calc(50dvh - 0.75rem) !important;
+  margin: 0.25rem 0.5rem 0.5rem 0.5rem !important;
 }
 
