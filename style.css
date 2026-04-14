@@ -1,0 +1,10 @@
+#simCanvas {
+  touch-action: none;
+}
+
+@media (max-width: 767px) {
+  #ui {
+	max-height: 45dvh;
+  }
+}
+

@@ -45,6 +45,7 @@ let mouseNoCanvas = false;
 
 let isDragging = false;
 let cargaArrastada = null;
+let ponteiroAtivoId = null;
 
 function ajustarCanvasAoLayout() {
   const rect = canvas.getBoundingClientRect();
@@ -73,17 +74,23 @@ document.getElementById('clear').addEventListener('click', () => {
 })
 
 // Botão de ligar/desligar multímetro
-document.getElementById('toggleSensor').addEventListener('click', (e) => {
+document.getElementById('toggleSensor').addEventListener('click', () => {
   usarMultimetro = !usarMultimetro;
   document.getElementById('spanMultimetro').innerHTML = usarMultimetro ? 'Desativar Multímetro' : 'Ativar Multímetro';
 });
 
 window.addEventListener('resize', ajustarCanvasAoLayout);
 
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', ajustarCanvasAoLayout);
+  window.visualViewport.addEventListener('scroll', ajustarCanvasAoLayout);
+}
+
 if (typeof ResizeObserver !== 'undefined') {
   const painelUI = document.getElementById('ui');
   const observer = new ResizeObserver(() => ajustarCanvasAoLayout());
   if (painelUI) observer.observe(painelUI);
+  observer.observe(canvas);
 }
 
 // Função principal de renderização (Loop)
@@ -107,62 +114,96 @@ renderizar();
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-// Pega a posição do mouse relativa ao Canvas
-function getMousePos(canvas, evt) {
+// Pega a posição do ponteiro (mouse/toque/caneta) relativa ao canvas
+function getPointerPos(canvas, evt) {
   const rect = canvas.getBoundingClientRect();
   mouseX = evt.clientX - rect.left;
   mouseY = evt.clientY - rect.top;
   return { x: mouseX, y: mouseY };
 }
 
-canvas.addEventListener('mousedown', (evt) => {
-  getMousePos(canvas, evt);
+function atualizarCursor() {
+  if (isDragging) {
+    canvas.style.cursor = 'grabbing';
+    return;
+  }
+
+  let hover = false;
+  for (let carga of cargas) {
+    if (carga.distanciaAte(mouseX, mouseY) <= carga.raio) {
+      hover = true;
+      break;
+    }
+  }
+
+  canvas.style.cursor = hover ? 'grab' : 'crosshair';
+}
+
+canvas.addEventListener('pointerdown', (evt) => {
+  getPointerPos(canvas, evt);
+  mouseNoCanvas = true;
+  ponteiroAtivoId = evt.pointerId;
 
   for (let i = cargas.length - 1; i >= 0; i--) {
     const carga = cargas[i];
 
-    // Verifica se o mouse está dentro do Hitbox da carga
+    // Verifica se o ponteiro está dentro do hitbox da carga
     if (carga.distanciaAte(mouseX, mouseY) <= carga.raio) {
       isDragging = true;
       cargaArrastada = carga;
-
-      canvas.style.cursor = 'grabbing';
       break;
     }
   }
+
+  if (typeof canvas.setPointerCapture === 'function') {
+    canvas.setPointerCapture(evt.pointerId);
+  }
+
+  atualizarCursor();
+  evt.preventDefault();
 });
 
-canvas.addEventListener('mousemove', (evt) => {
-  getMousePos(canvas, evt);
+canvas.addEventListener('pointermove', (evt) => {
+  if (ponteiroAtivoId !== null && evt.pointerId !== ponteiroAtivoId) return;
+
+  getPointerPos(canvas, evt);
   mouseNoCanvas = true;
 
   if (isDragging && cargaArrastada) {
     cargaArrastada.x = mouseX;
     cargaArrastada.y = mouseY;
-  } else {
-    // Muda o cursor se o mouse está sobre alguma carga
-    let hover = false;
-    for (let carga of cargas) {
-      if (carga.distanciaAte(mouseX, mouseY) <= carga.raio) {
-        hover = true;
-        break;
-      }
-    }
-    canvas.style.cursor = hover ? 'grab' : 'crosshair';
   }
+
+  atualizarCursor();
+  evt.preventDefault();
 });
 
-canvas.addEventListener('mouseup', () => {
+function finalizarInteracao(evt) {
+  if (ponteiroAtivoId !== null && evt.pointerId !== ponteiroAtivoId) return;
+
   isDragging = false;
   cargaArrastada = null;
-  canvas.style.cursor = 'crosshair';
-});
+  ponteiroAtivoId = null;
 
-canvas.addEventListener('mouseout', () => {
+  if (typeof canvas.releasePointerCapture === 'function') {
+    try {
+      canvas.releasePointerCapture(evt.pointerId);
+    } catch (_) {
+      // Ignora erros quando o ponteiro ja foi liberado pelo browser.
+    }
+  }
+
+  atualizarCursor();
+}
+
+canvas.addEventListener('pointerup', finalizarInteracao);
+canvas.addEventListener('pointercancel', finalizarInteracao);
+
+canvas.addEventListener('pointerleave', () => {
   mouseNoCanvas = false;
-  isDragging = false;
-  cargaArrastada = null;
-  canvas.style.cursor = 'crosshair';
+  if (!isDragging) {
+    canvas.style.cursor = 'crosshair';
+  }
 });
 
 
