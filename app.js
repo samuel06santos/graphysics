@@ -39,7 +39,7 @@ class Carga {
 const k = 10000;
 let cargas = [];
 
-let usarMultimetro = false;
+let usarMultimetro = true;
 let mouseX = 0;
 let mouseY = 0;
 let mouseNoCanvas = false;

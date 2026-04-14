@@ -9,14 +9,14 @@ body.viewport-portrait {
 body.viewport-portrait #ui {
   width: auto !important;
   max-height: none;
-  height: calc(50dvh - 0.75rem) !important;
+  height: calc(33dvh - 0.75rem) !important;
   margin: 0.5rem 0.5rem 0.25rem 0.5rem !important;
 }
 
 body.viewport-portrait #simCanvas {
   flex: none !important;
   min-height: 0;
-  height: calc(50dvh - 0.75rem) !important;
+  height: calc(67dvh - 0.75rem) !important;
   margin: 0.25rem 0.5rem 0.5rem 0.5rem !important;
 }
 
