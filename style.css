@@ -9,14 +9,37 @@ body.viewport-portrait {
 body.viewport-portrait #ui {
   width: auto !important;
   max-height: none;
-  height: calc(33dvh - 0.75rem) !important;
+  height: calc(38dvh - 0.75rem) !important;
   margin: 0.5rem 0.5rem 0.25rem 0.5rem !important;
 }
 
 body.viewport-portrait #simCanvas {
   flex: none !important;
   min-height: 0;
-  height: calc(67dvh - 0.75rem) !important;
+  height: calc(62dvh - 0.75rem) !important;
   margin: 0.25rem 0.5rem 0.5rem 0.5rem !important;
 }
 
+#menuCarga {
+  min-width: 160px;
+  background-color: #1f2937;
+  border: 1px solid #4b5563;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  padding: 4px 0;
+}
+
+#menuCarga.hidden {
+  display: none;
+}
+
+#btnRemoverCarga {
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: background-color 0.2s ease;
+}
+
+#btnRemoverCarga:hover {
+  background-color: #dc2626;
+}

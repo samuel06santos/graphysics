@@ -11,7 +11,7 @@
 
     <title>Simulador de Campos Elétricos &bullet; GraPhysics</title>
 </head>
-<body id="appRoot" class="flex flex-col md:flex-row m-0 text-white font-sans bg-[#1e1e1e] h-[100dvh] overflow-hidden">
+<body id="appRoot" class="flex flex-col md:flex-row m-0 text-white font-sans bg-[#1e1e1e] h-[100dvh] overflow-hidden relative">
     <div id="ui"
         class="flex flex-col p-2 pb-3 m-2 gap-4 rounded-lg border border-gray-400 select-none w-auto md:w-85 shrink-0 overflow-y-auto bg-[#2e2e2e] md:h-[calc(100dvh-1rem)]">
 
@@ -40,9 +40,23 @@
             </button>
         </div>
 
+        <div class="flex flex-col gap-2">
+            <h3>Visualização</h3>
+            <button id="toggleVectors"
+                class="cursor-pointer flex justify-center items-center p-2 gap-2 border border-white rounded-xl bg-slate-600 hover:bg-slate-700">
+                <i class="fa-solid fa-arrow-up-long rotate-45"></i>
+                <span id="spanVetores">Vetores com opacidade</span>
+            </button>
+            <button id="toggleHeatmap"
+                class="cursor-pointer flex justify-center items-center p-2 gap-2 border border-white rounded-xl bg-fuchsia-600 hover:bg-fuchsia-700">
+                <i class="fa-solid fa-fire"></i>
+                <span id="spanHeatmap">Desativar Mapa de Potencial</span>
+            </button>
+        </div>
+
         <button id="toggleSensor"
             class="cursor-pointer flex justify-center items-center p-2 gap-2 border border-white rounded-xl bg-yellow-600 hover:bg-yellow-700">
-            <i class="fa-solid fa-ruler"></i>
+            <i class="fa-solid fa-gauge-high"></i>
             <span id="spanMultimetro">Desativar Multímetro</span>
         </button>
 
@@ -60,6 +74,13 @@
     <canvas id="simCanvas"
         class="flex-1 min-w-0 min-h-0 cursor-crosshair border-2 m-2 mt-0 md:mt-2 border-[#333] bg-[#000]"
     ></canvas>
+
+    <div id="menuCarga" class="hidden fixed bg-gray-800 border border-gray-400 rounded-lg shadow-lg z-50">
+        <button id="btnRemoverCarga" class="w-full px-4 py-2 text-white hover:bg-red-600 text-left text-sm rounded-lg flex items-center gap-2">
+            <i class="fa-solid fa-trash"></i>
+            Remover Carga
+        </button>
+    </div>
 
     <script src="app.js"></script>
 </body>
