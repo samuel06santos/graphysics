@@ -500,9 +500,13 @@ function atualizarPainelPotencial() {
 
   const detalhes = calcularDetalhesPotencial(mouseX, mouseY);
 
+  const canvasRect = canvas.getBoundingClientRect();
+  const canvasCenter = canvasRect.left + (canvasRect.width / 2);
+
   // Monta expressões LaTeX
   if (detalhes.termos.length === 0) {
     painel.innerHTML = '<div class="linha-equacao">Nenhuma carga presente.</div>';
+    painel.style.left = `${canvasCenter}px`;
     painel.classList.remove('hidden');
     return;
   }
@@ -533,7 +537,7 @@ function atualizarPainelPotencial() {
   }
 
   painel.innerHTML = html;
-  painel.style.left = `${canvas.getBoundingClientRect().left * 2}px`;
+  painel.style.left = `${canvasCenter}px`;
   painel.classList.remove('hidden');
 }
 
@@ -614,7 +618,6 @@ function desenharRastreadorMouse(context) {
 
   const grade = coordenadasDaGrade(mouseX, mouseY);
   const linhas = [
-    'Mouse / Grade',
     `X: ${formatarCoordenada(grade.x)} px`,
     `Y: ${formatarCoordenada(grade.y)} px`,
   ];
@@ -625,21 +628,20 @@ function desenharRastreadorMouse(context) {
   context.textBaseline = 'middle';
 
   const largura = Math.max(...linhas.map((linha) => context.measureText(linha).width)) + 20;
-  const altura = 18 + linhas.length * 16;
-  const x = 12;
-  const y = 12;
+  const altura = 10 + linhas.length * 16;
+  const x = 36;
+  const y = 20;
 
-  context.fillStyle = 'rgba(0, 0, 0, 0.72)';
+  context.fillStyle = 'rgba(0, 0, 0, 0.52)';
   context.fillRect(x, y, largura, altura);
 
-  context.strokeStyle = 'rgba(52, 211, 153, 0.9)';
+  context.strokeStyle = 'rgba(47,50,47,0.9)';
   context.lineWidth = 1;
   context.strokeRect(x, y, largura, altura);
 
   context.fillStyle = '#34d399';
   context.fillText(linhas[0], x + 10, y + 14);
   context.fillText(linhas[1], x + 10, y + 30);
-  context.fillText(linhas[2], x + 10, y + 46);
   context.restore();
 }
 
