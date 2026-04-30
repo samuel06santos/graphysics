@@ -8,7 +8,7 @@ class Carga {
   constructor(x, y, q) {
     this.x = x;
     this.y = y;
-    this.q = q;
+    this.q = q; // Carga elétrica em Coulomb Positiva = +1 // Negativa = -1
     this.raio = 15;
   }
 
@@ -56,6 +56,7 @@ const GRID_MAJOR_SPACING = 100;
 let isDragging = false;
 let cargaArrastada = null;
 let ponteiroAtivoId = null;
+let cargaMenuSelecionada = -1;
 
 function aplicarModoLayoutViewport() {
   const viewport = window.visualViewport;
@@ -94,6 +95,14 @@ function formatarCoordenada(valor) {
   if (Math.abs(valor) < 0.5) return '0';
   const sinal = valor >= 0 ? '+' : '-';
   return `${sinal}${Math.round(Math.abs(valor))}`;
+}
+
+function formatarNumero(valor, casas = 1) {
+  return Number(valor).toFixed(casas).replace(/\.0+$/, '').replace(/(\.\d*[1-9])0+$/, '$1');
+}
+
+function formatarCarga(q) {
+  return q > 0 ? '+1' : '-1';
 }
 
 function ajustarCanvasAoLayout() {
@@ -173,6 +182,7 @@ function renderizar() {
 
   desenharMultimetro(ctx);
   desenharRastreadorMouse(ctx);
+  atualizarPainelPotencial();
   requestAnimationFrame(renderizar);
 }
 
@@ -449,9 +459,14 @@ function desenharGrade(context) {
 
 // Calcula o Potencial Escalar (V) em um ponto (px, py)
 function calcularPotencial(px, py) {
-  let V = 0;
+  return calcularDetalhesPotencial(px, py).V;
+}
 
-  for (let carga of cargas) {
+function calcularDetalhesPotencial(px, py) {
+  let V = 0;
+  const termos = [];
+
+  cargas.forEach((carga, indice) => {
     let dx = px - carga.x;
     let dy = py - carga.y;
     let r = Math.sqrt(dx * dx + dy * dy);
@@ -460,10 +475,66 @@ function calcularPotencial(px, py) {
     if (r < 5) r = 5;
 
     // V = k * q / r
-    V += (k * carga.q) / r;
+    const contribuicao = (k * carga.q) / r;
+    V += contribuicao;
+
+    termos.push({
+      indice: indice + 1,
+      carga,
+      r,
+      contribuicao,
+    });
+  });
+
+  return { V, termos };
+}
+
+function atualizarPainelPotencial() {
+  const painel = document.getElementById('painelPotencial');
+  if (!painel) return;
+
+  if (!usarMultimetro || !mouseNoCanvas) {
+    painel.classList.add('hidden');
+    return;
   }
 
-  return V;
+  const detalhes = calcularDetalhesPotencial(mouseX, mouseY);
+
+  // Monta expressões LaTeX
+  if (detalhes.termos.length === 0) {
+    painel.innerHTML = '<div class="linha-equacao">Nenhuma carga presente.</div>';
+    painel.classList.remove('hidden');
+    return;
+  }
+
+  // 1) Expressão simbólica: V = \sum k q_i / r_i
+  const simbolica = `V = ${detalhes.termos.map((t, i) => `\\frac{k q_{${i+1}}}{r_{${i+1}}}`).join(' + ')}`;
+
+  // 2) Substituindo k, q_i e r_i
+  const substituida = `V = ${detalhes.termos.map((t, i) => `\\frac{${k}\\cdot(${t.carga.q > 0 ? '+' : '-'}1)}{${formatarNumero(t.r,1)}}`).join(' + ')}`;
+
+  // 3) Valores numéricos das contribuições
+  const contribuicoes = `V = ${detalhes.termos.map((t) => `${formatarNumero(t.contribuicao,1)}`).join(' + ')}`;
+
+  // 4) Valor total
+  const total = `V = ${formatarNumero(detalhes.V,1)}\\ {Volts}`;
+
+  // Monta o HTML com KaTeX (renderToString)
+  let html = '';
+  try {
+    html += `<div class="linha-equacao">${katex.renderToString('Potencial \\ Elétrico\\ (V)', { throwOnError: false, displayMode: false })}</div>`;
+    html += `<div class="linha-equacao">${katex.renderToString(simbolica, { throwOnError: false, displayMode: false })}</div>`;
+    html += `<div class="linha-equacao">${katex.renderToString(substituida, { throwOnError: false, displayMode: false })}</div>`;
+    html += `<div class="linha-equacao">${katex.renderToString(contribuicoes, { throwOnError: false, displayMode: false })}</div>`;
+    html += `<div class="linha-equacao">${katex.renderToString(total, { throwOnError: false, displayMode: false })}</div>`;
+  } catch (e) {
+    // Fallback: texto simples
+    html = `<div class="linha-equacao">${simbolica}</div><div class="linha-equacao">${substituida}</div><div class="linha-equacao">${contribuicoes}</div><div class="linha-equacao">${total}</div>`;
+  }
+
+  painel.innerHTML = html;
+  painel.style.left = `${canvas.getBoundingClientRect().left * 2}px`;
+  painel.classList.remove('hidden');
 }
 
 // Pinta o fundo do Canvas baseado no Potencial
@@ -571,3 +642,6 @@ function desenharRastreadorMouse(context) {
   context.fillText(linhas[2], x + 10, y + 46);
   context.restore();
 }
+
+
+
