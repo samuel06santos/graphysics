@@ -2,6 +2,7 @@ const canvas = document.getElementById('simCanvas');
 const ctx = canvas.getContext('2d');
 const appRoot = document.getElementById('appRoot');
 const menuCarga = document.getElementById('menuCarga');
+const painel = document.getElementById('painelPotencial');
 const btnRemoverCarga = document.getElementById('btnRemoverCarga');
 
 class Carga {
@@ -46,6 +47,7 @@ let mostrarHeatmap = true;
 let mouseX = 0;
 let mouseY = 0;
 let mouseNoCanvas = false;
+let panelHover = false;
 
 // Modos de visualização de vetores: 0 = com opacidade, 1 = sem opacidade (100%), 2 = oculto
 let modoVetores = 0;
@@ -337,6 +339,18 @@ btnRemoverCarga.addEventListener('click', () => {
   }
 });
 
+if (painel) {
+  painel.addEventListener('mouseenter', () => {
+    panelHover = true;
+    atualizarPainelPotencial();
+  });
+
+  painel.addEventListener('mouseleave', () => {
+    panelHover = false;
+    atualizarPainelPotencial();
+  });
+}
+
 
 // Calcula o vetor resultante do Campo Elétrico (Ex, Ey) em um ponto (px, py)
 function calcularCampoEletrico(px, py) {
@@ -490,10 +504,9 @@ function calcularDetalhesPotencial(px, py) {
 }
 
 function atualizarPainelPotencial() {
-  const painel = document.getElementById('painelPotencial');
   if (!painel) return;
 
-  if (!usarMultimetro || !mouseNoCanvas) {
+  if (!usarMultimetro || (!mouseNoCanvas && !panelHover)) {
     painel.classList.add('hidden');
     return;
   }
