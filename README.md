@@ -1,5 +1,5 @@
 # [GraPhysics](https://samuel06santos.github.io/graphysics/)
-<img src="graphysics-logo-png3.png" alt="GraPhysics Logo" width="200"/>
+<img src="./public/images/graphysics-logo.png" alt="GraPhysics Logo" width="200"/>
 
 GraPhysics é um simulador de física que utiliza computação gráfica aplicado na web.
 
