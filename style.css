@@ -33,7 +33,7 @@ body.viewport-portrait #simCanvas {
   display: none;
 }
 
-#btnRemoverCarga {
+#btnRemoverCarga, #btnMoverCarga {
   cursor: pointer;
   border: none;
   outline: none;

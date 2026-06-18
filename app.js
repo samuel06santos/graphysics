@@ -3,12 +3,13 @@ const ctx = canvas.getContext('2d');
 const appRoot = document.getElementById('appRoot');
 const menuCarga = document.getElementById('menuCarga');
 const painel = document.getElementById('painelPotencial');
+const btnMoverCarga = document.getElementById('btnMoverCarga');
 const btnRemoverCarga = document.getElementById('btnRemoverCarga');
 
 class Carga {
   constructor({id, x, y, q}) {
     this.id = id;
-    this.label = '';
+    this.label = `q${id}`;
     this.x = x;
     this.y = y;
     this.q = q; // Carga elétrica em Coulomb Positiva = +1 // Negativa = -1
@@ -49,15 +50,14 @@ class Carga {
 }
 
 // Constante eletrostática
-// const k = 10000;
 const materiais = {
-  "vacuo": { name: "Vácuo / Ar", dielectricConstant: 1.0, k_value: 9000000000 },
-  "oleo": { name: "Óleo", dielectricConstant: 2.2, k_value: 4090909090 },
-  "borracha": { name: "Borracha", dielectricConstant: 3.0, k_value: 3000000000 },
-  "papel": { name: "Papel", dielectricConstant: 3.5, k_value: 2571428571 },
-  "vidro": { name: "Vidro", dielectricConstant: 6.0, k_value: 1500000000 },
-  "etanol": { name: "Etanol", dielectricConstant: 24.0, k_value: 375000000 },
-  "agua": { name: "Água Pura", dielectricConstant: 80.0, k_value: 112500000 }
+  "vacuo": { name: "Vácuo / Ar", dielectricConstant: 1.0, k_value: 10000.0 },
+  "oleo": { name: "Óleo", dielectricConstant: 2.2, k_value: 4545.45 },
+  "borracha": { name: "Borracha", dielectricConstant: 3.0, k_value: 3333.33 },
+  "papel": { name: "Papel", dielectricConstant: 3.5, k_value: 2857.14 },
+  "vidro": { name: "Vidro", dielectricConstant: 6.0, k_value: 1666.67 },
+  "etanol": { name: "Etanol", dielectricConstant: 24.0, k_value: 416.67 },
+  "agua": { name: "Água Pura", dielectricConstant: 80.0, k_value: 125.0 }
 }
 let materialSelecionado = 'vacuo';
 let K_CONSTANT = materiais[materialSelecionado].k_value;
@@ -103,18 +103,34 @@ function atualizarTextoBotao(id, texto) {
   if (elemento) elemento.textContent = texto;
 }
 
+/**
+ * Obtém a origem da grade, que é o centro do canvas.
+ * @returns {Object} - Objeto com as coordenadas da origem: { x, y }
+ */
 function getGridOrigin() {
   return { x: canvas.width / 2, y: canvas.height / 2 };
 }
 
+/**
+* Converte coordenadas de pixel (px, py) para coordenadas relativas à grade, onde a origem (0,0) está no centro do canvas.
+* Isso é útil para exibir coordenadas de carga e do multímetro de forma mais intuitiva, com o centro do canvas representando (0,0) na grade.
+* @param {number} px - Coordenada x em pixels (relativa ao canto superior esquerdo do canvas)
+* @param {number} py - Coordenada y em pixels (relativa ao canto superior esquerdo do canvas)
+* @return {Object} - Objeto com as coordenadas relativas à grade: { x, y }
+*/
 function coordenadasDaGrade(px, py) {
   const origem = getGridOrigin();
   return {
-    x: px - origem.x,
-    y: py - origem.y,
+    x: Math.round(px - origem.x),
+    y: Math.round(py - origem.y)
   };
 }
 
+/**
+* Formata um valor de coordenada para exibição, arredondando e adicionando um sinal de + ou -.
+* @param {number} valor - O valor da coordenada a ser formatado.
+* @return {string} - O valor formatado.
+*/
 function formatarCoordenada(valor) {
   if (Math.abs(valor) < 0.5) return '0';
   const sinal = valor >= 0 ? '+' : '-';
@@ -148,6 +164,7 @@ if (materialSelect) {
     const option = document.createElement('option');
     option.value = key;
     option.textContent = materiais[key].name;
+    option.className = 'bg-gray-800! cursor-pointer! hover:bg-gray-700!';
     materialSelect.appendChild(option);
   });
   // Seleciona o padrão
@@ -248,11 +265,19 @@ renderizar();
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-// Pega a posição do ponteiro (mouse/toque/caneta) relativa ao canvas
+/**
+ * Pega a posição do ponteiro (mouse/toque/caneta) relativa ao canvas
+ * A função calcula a posição do ponteiro subtraindo as coordenadas do canto superior esquerdo do canvas (obtidas com getBoundingClientRect) das coordenadas do ponteiro (evt.clientX e evt.clientY).
+ * 
+ * O resultado é arredondado para o inteiro mais próximo para garantir que as coordenadas sejam precisas e correspondam aos pixels do canvas.
+ * @param {HTMLCanvasElement} canvas - O elemento canvas onde a posição será calculada
+ * @param {PointerEvent} evt - O evento de ponteiro que contém as coordenadas do ponteiro
+ * @return {Object} - Um objeto contendo as coordenadas x e y do ponteiro relativas ao canvas: { x, y }
+ */
 function getPointerPos(canvas, evt) {
   const rect = canvas.getBoundingClientRect();
-  mouseX = evt.clientX - rect.left;
-  mouseY = evt.clientY - rect.top;
+  mouseX = Math.floor(evt.clientX - rect.left);
+  mouseY = Math.floor(evt.clientY - rect.top);
   return { x: mouseX, y: mouseY };
 }
 
@@ -291,6 +316,15 @@ function fecharMenuCarga() {
 
 function abrirMenuCarga(clientX, clientY, indiceCarga) {
   cargaMenuSelecionada = indiceCarga;
+  const carga = cargas[indiceCarga];
+
+  const { x: xCargaGrade, y: yCargaGrade } = coordenadasDaGrade(carga.x, carga.y);
+  document.getElementById('infoCargaContainer').classList.remove('border-red-300', 'border-blue-300');
+  document.getElementById('infoCargaContainer').classList.add(carga.q > 0 ? 'border-red-300' : 'border-blue-300');
+  document.getElementById('labelCarga').innerHTML = `<div class="linha-equacao text-center">${katex.renderToString(`q_${carga.id}`, { throwOnError: false, displayMode: false })}</div>`;
+  document.getElementById('infoCarga').textContent = `Carga: ${carga.q > 0 ? '+' : ''}${carga.q} Coulomb`;
+  document.getElementById('posicaoXCarga').textContent = `X: ${formatarCoordenada(xCargaGrade)} px`;
+  document.getElementById('posicaoYCarga').textContent = `Y: ${formatarCoordenada(yCargaGrade)} px`;
   menuCarga.style.left = clientX + 'px';
   menuCarga.style.top = clientY + 'px';
   menuCarga.classList.remove('hidden');
@@ -384,6 +418,24 @@ document.addEventListener('click', (evt) => {
   }
 });
 
+// Mover carga para X e Y 
+btnMoverCarga.addEventListener('click', () => {
+  if (cargaMenuSelecionada !== -1 && cargaMenuSelecionada < cargas.length) {
+    let newX = parseFloat(prompt("Digite a nova coordenada X:"));
+    let newY = parseFloat(prompt("Digite a nova coordenada Y:"));
+    if (!isNaN(newX) && !isNaN(newY)) {
+      // traduz as coordenadas do grid para coordenadas do canvas
+      const origem = getGridOrigin();
+      const canvasX = Math.floor(origem.x + newX);
+      const canvasY = Math.floor(origem.y + newY);
+
+      cargas[cargaMenuSelecionada].x = canvasX;
+      cargas[cargaMenuSelecionada].y = canvasY;
+    }
+    fecharMenuCarga();
+  }
+});
+
 // Remover carga ao clicar no botão do menu
 btnRemoverCarga.addEventListener('click', () => {
   if (cargaMenuSelecionada !== -1 && cargaMenuSelecionada < cargas.length) {
@@ -406,8 +458,26 @@ if (painel) {
 }
 
 
-// Calcula o vetor resultante do Campo Elétrico (Ex, Ey) em um ponto (px, py)
+/**
+ * Calcula o vetor resultante do Campo Elétrico (Ex, Ey) em um ponto (px, py)
+ * O campo elétrico é a soma vetorial dos campos gerados por cada carga individual.
+ * O campo elétrico de uma carga pontual é dado por:
+ * E = k * q / r^2
+ * Onde:
+ * - k é a constante eletrostática (K_CONSTANT)
+ * - q é a carga elétrica
+ * - r é a distância entre a carga e o ponto de interesse
+ * 
+ * O vetor resultante é obtido somando as componentes x e y de cada campo individual.
+ * @param {number} px - Coordenada x do ponto de interesse
+ * @param {number} py - Coordenada y do ponto de interesse
+ * @return {Object} - Objeto com as componentes do campo elétrico: { Ex, Ey }
+ */
 function calcularCampoEletrico(px, py) {
+  // Garante inteiros para px/py
+  px = Math.floor(px);
+  py = Math.floor(py);
+
   let Ex = 0;
   let Ey = 0;
 
@@ -525,36 +595,59 @@ function desenharGrade(context) {
 }
 
 
-// Calcula o Potencial Escalar (V) em um ponto (px, py)
+/**
+ * Calcula o Potencial Escalar (V) em um ponto (px, py)
+ * @param {number} px - Coordenada x do ponto de interesse
+ * @param {number} py - Coordenada y do ponto de interesse
+ * @return {number} - O potencial escalar no ponto (px, py)
+ */
 function calcularPotencial(px, py) {
   return calcularDetalhesPotencial(px, py).V;
 }
 
-// Calcula o Potencial Escalar (V) e detalhes das contribuições de cada carga em um ponto (px, py)
+/**
+ * Calcula o Potencial Escalar (V) e detalhes das contribuições de cada carga em um ponto (px, py)
+ * O potencial escalar é a soma das contribuições de cada carga individual, dado por:
+ * V = Σ(k * q / r)
+ * Onde:
+ * - k é a constante eletrostática (K_CONSTANT)
+ * - q é a carga elétrica
+ * - r é a distância entre a carga e o ponto de interesse
+ * 
+ * Cada contribuição é armazenada em um array de termos, contendo o índice da carga, a carga em si, a distância r e a contribuição individual para o potencial.
+ * @param {number} px - Coordenada x do ponto de interesse
+ * @param {number} py - Coordenada y do ponto de interesse
+ * @return {Object} - Objeto com o potencial escalar e os detalhes das contribuições
+ */
 function calcularDetalhesPotencial(px, py) {
+  // Garante inteiros para px/py
+  px = Math.floor(px);
+  py = Math.floor(py);
+  
   let V = 0;
   const termos = [];
-
+  
   cargas.forEach((carga, indice) => {
     let dx = px - carga.x;
     let dy = py - carga.y;
     let r = Math.sqrt(dx * dx + dy * dy);
-
+    
     // Se estivermos exatamente no centro da carga, o V tenderia ao infinito.
     if (r < 5) r = 5;
-
+    
     // V = k * q / r
     const contribuicao = (K_CONSTANT * carga.q) / r;
     V += contribuicao;
-
+    
     termos.push({
       indice: indice + 1,
       carga,
       r,
       contribuicao,
     });
+    
   });
-
+  
   return { V, termos };
 }
 
@@ -599,7 +692,7 @@ function atualizarPainelPotencial() {
   // Monta o HTML com KaTeX (renderToString)
   let html = '';
   try {
-    html += `<div class="linha-equacao">${katex.renderToString('Potencial \\ Elétrico\\ (V)', { throwOnError: false, displayMode: false })}</div>`;
+    html += `<div class="linha-equacao">${katex.renderToString('\\text{Potencial Elétrico } (V)', { throwOnError: false, displayMode: false })}</div>`;
     html += `<div class="linha-equacao">${katex.renderToString(simbolica, { throwOnError: false, displayMode: false })}</div>`;
     html += `<div class="linha-equacao">${katex.renderToString(substituida, { throwOnError: false, displayMode: false })}</div>`;
     html += `<div class="linha-equacao">${katex.renderToString(contribuicoes, { throwOnError: false, displayMode: false })}</div>`;
@@ -653,6 +746,7 @@ function desenharMultimetro(context) {
   let campo = calcularCampoEletrico(mouseX, mouseY);
   let grade = coordenadasDaGrade(mouseX, mouseY);
 
+  // Calcula a magnitude do campo elétrico usando Pitágoras (|E| = sqrt(Ex^2 + Ey^2))
   let magE = Math.sqrt(campo.Ex * campo.Ex + campo.Ey * campo.Ey);
 
   let textoV = `V: ${V.toFixed(1)} Volts`;
