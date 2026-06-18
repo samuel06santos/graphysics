@@ -6,7 +6,9 @@ const painel = document.getElementById('painelPotencial');
 const btnRemoverCarga = document.getElementById('btnRemoverCarga');
 
 class Carga {
-  constructor(x, y, q) {
+  constructor({id, x, y, q}) {
+    this.id = id;
+    this.label = '';
     this.x = x;
     this.y = y;
     this.q = q; // Carga elétrica em Coulomb Positiva = +1 // Negativa = -1
@@ -35,6 +37,14 @@ class Carga {
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.fillText(this.q > 0 ? '+' : '-', this.x, this.y);
+
+    context.font = 'italic 20px Times New Roman';
+    context.fillText(`q`, this.x + this.raio + 1, this.y + this.raio);
+
+    context.font = 'italic 14px Times New Roman';
+    context.textBaseline = 'top';
+    const offsetX = this.id >= 10 ? 12 : 8;
+    context.fillText(this.id, this.x + this.raio + offsetX, this.y + this.raio);
   }
 }
 
@@ -47,7 +57,8 @@ let mostrarHeatmap = true;
 let mouseX = 0;
 let mouseY = 0;
 let mouseNoCanvas = false;
-let panelHover = false;
+let painelHover = false;
+let proximaCargaIndex = 1;
 
 // Modos de visualização de vetores: 0 = com opacidade, 1 = sem opacidade (100%), 2 = oculto
 let modoVetores = 0;
@@ -59,6 +70,44 @@ let isDragging = false;
 let cargaArrastada = null;
 let ponteiroAtivoId = null;
 let cargaMenuSelecionada = -1;
+
+const materiais = {
+  "vacuo": {
+    "name": "Vácuo / Ar",
+    "dielectricConstant": 1.0,
+    "k_value": 9000000000
+  },
+  "oleo": {
+    "name": "Óleo",
+    "dielectricConstant": 2.2,
+    "k_value": 4090909090
+  },
+  "borracha": {
+    "name": "Borracha",
+    "dielectricConstant": 3.0,
+    "k_value": 3000000000
+  },
+  "papel": {
+    "name": "Papel",
+    "dielectricConstant": 3.5,
+    "k_value": 2571428571
+  },
+  "vidro": {
+    "name": "Vidro",
+    "dielectricConstant": 6.0,
+    "k_value": 1500000000
+  },
+  "etanol": {
+    "name": "Etanol",
+    "dielectricConstant": 24.0,
+    "k_value": 375000000
+  },
+  "agua": {
+    "name": "Água Pura",
+    "dielectricConstant": 80.0,
+    "k_value": 112500000
+  }
+}
 
 function aplicarModoLayoutViewport() {
   const viewport = window.visualViewport;
@@ -120,17 +169,30 @@ function ajustarCanvasAoLayout() {
 
 // --- Eventos de UI ---
 document.getElementById('addPos').addEventListener('click', () => {
-  cargas.push(new Carga(canvas.width / 2 + (Math.random() * 50 - 25), canvas.height / 2, 1));
+  const novaCarga = new Carga({
+    id: proximaCargaIndex++,
+    x: canvas.width / 2 + (Math.random() * 50 - 25),
+    y: canvas.height / 2,
+    q: 1
+  });
+  cargas.push(novaCarga);
 });
 
 // Adiciona uma carga negativa no centro
 document.getElementById('addNeg').addEventListener('click', () => {
-  cargas.push(new Carga(canvas.width / 2 + (Math.random() * 50 - 25), canvas.height / 2, -1));
+  const novaCarga = new Carga({
+    id: proximaCargaIndex++,
+    x: canvas.width / 2 + (Math.random() * 50 - 25),
+    y: canvas.height / 2,
+    q: -1
+  });
+  cargas.push(novaCarga);
 });
 
 // Limpa todas as cargas da tela
 document.getElementById('clear').addEventListener('click', () => {
   cargas = [];
+  proximaCargaIndex = 1;
 })
 
 // Botão de ligar/desligar multímetro
@@ -341,12 +403,12 @@ btnRemoverCarga.addEventListener('click', () => {
 
 if (painel) {
   painel.addEventListener('mouseenter', () => {
-    panelHover = true;
+    painelHover = true;
     atualizarPainelPotencial();
   });
 
   painel.addEventListener('mouseleave', () => {
-    panelHover = false;
+    painelHover = false;
     atualizarPainelPotencial();
   });
 }
@@ -476,6 +538,7 @@ function calcularPotencial(px, py) {
   return calcularDetalhesPotencial(px, py).V;
 }
 
+// Calcula o Potencial Escalar (V) e detalhes das contribuições de cada carga em um ponto (px, py)
 function calcularDetalhesPotencial(px, py) {
   let V = 0;
   const termos = [];
@@ -503,10 +566,11 @@ function calcularDetalhesPotencial(px, py) {
   return { V, termos };
 }
 
+// Atualiza o painel potencial e detalhes das contribuições das cargas
 function atualizarPainelPotencial() {
   if (!painel) return;
 
-  if (!usarMultimetro || (!mouseNoCanvas && !panelHover)) {
+  if (!usarMultimetro || (!mouseNoCanvas && !painelHover)) {
     painel.classList.add('hidden');
     return;
   }
@@ -525,16 +589,20 @@ function atualizarPainelPotencial() {
   }
 
   // 1) Expressão simbólica: V = \sum k q_i / r_i
-  const simbolica = `V = ${detalhes.termos.map((t, i) => `\\frac{k q_{${i+1}}}{r_{${i+1}}}`).join(' + ')}`;
+  const simbolica = `V = ${detalhes.termos.map((t, i) => `\\frac{k q_{${t.carga.id}}}{r_{${t.carga.id}}}`).join(' + ')}`;
 
   // 2) Substituindo k, q_i e r_i
-  const substituida = `V = ${detalhes.termos.map((t, i) => `\\frac{${k}\\cdot(${t.carga.q > 0 ? '+' : '-'}1)}{${formatarNumero(t.r,1)}}`).join(' + ')}`;
+  const substituida = `V = ${detalhes.termos.map((t, i) => `\\frac{${k}\\cdot(${t.carga.q > 0 ? '+' : '-'}1)}{${formatarNumero(t.r, 1)}}`).join(' + ')}`;
 
   // 3) Valores numéricos das contribuições
-  const contribuicoes = `V = ${detalhes.termos.map((t) => `${formatarNumero(t.contribuicao,1)}`).join(' + ')}`;
+  const contribuicoes = `V \\approx ${detalhes.termos.map((t) => {
+    const valorFormatado = formatarNumero(t.contribuicao, 1);
+    return (t.contribuicao < 0) ? `(${valorFormatado})` : `${valorFormatado}`;
+  }).join(' + ')}`;
+  
 
   // 4) Valor total
-  const total = `V = ${formatarNumero(detalhes.V,1)}\\ {Volts}`;
+  const total = `V \\approx ${formatarNumero(detalhes.V, 1)}\\ {Volts}`;
 
   // Monta o HTML com KaTeX (renderToString)
   let html = '';
@@ -585,6 +653,7 @@ function desenharHeatmap(context) {
   }
 }
 
+// Desenha o multímetro seguindo o ponteiro, mostrando o potencial, campo elétrico e coordenadas
 function desenharMultimetro(context) {
   if (!usarMultimetro || !mouseNoCanvas) return;
 
@@ -626,6 +695,7 @@ function desenharMultimetro(context) {
   context.fillText(textoY, caixaX + 10, caixaY + 66);
 }
 
+// Desenha um rastreador de mouse fixo no canto superior esquerdo, mostrando as coordenadas relativas à grade
 function desenharRastreadorMouse(context) {
   if (!mouseNoCanvas) return;
 
@@ -657,6 +727,4 @@ function desenharRastreadorMouse(context) {
   context.fillText(linhas[1], x + 10, y + 30);
   context.restore();
 }
-
-
 
