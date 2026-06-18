@@ -49,7 +49,18 @@ class Carga {
 }
 
 // Constante eletrostática
-const k = 10000;
+// const k = 10000;
+const materiais = {
+  "vacuo": { name: "Vácuo / Ar", dielectricConstant: 1.0, k_value: 9000000000 },
+  "oleo": { name: "Óleo", dielectricConstant: 2.2, k_value: 4090909090 },
+  "borracha": { name: "Borracha", dielectricConstant: 3.0, k_value: 3000000000 },
+  "papel": { name: "Papel", dielectricConstant: 3.5, k_value: 2571428571 },
+  "vidro": { name: "Vidro", dielectricConstant: 6.0, k_value: 1500000000 },
+  "etanol": { name: "Etanol", dielectricConstant: 24.0, k_value: 375000000 },
+  "agua": { name: "Água Pura", dielectricConstant: 80.0, k_value: 112500000 }
+}
+let materialSelecionado = 'vacuo';
+let K_CONSTANT = materiais[materialSelecionado].k_value;
 let cargas = [];
 
 let usarMultimetro = true;
@@ -70,44 +81,6 @@ let isDragging = false;
 let cargaArrastada = null;
 let ponteiroAtivoId = null;
 let cargaMenuSelecionada = -1;
-
-const materiais = {
-  "vacuo": {
-    "name": "Vácuo / Ar",
-    "dielectricConstant": 1.0,
-    "k_value": 9000000000
-  },
-  "oleo": {
-    "name": "Óleo",
-    "dielectricConstant": 2.2,
-    "k_value": 4090909090
-  },
-  "borracha": {
-    "name": "Borracha",
-    "dielectricConstant": 3.0,
-    "k_value": 3000000000
-  },
-  "papel": {
-    "name": "Papel",
-    "dielectricConstant": 3.5,
-    "k_value": 2571428571
-  },
-  "vidro": {
-    "name": "Vidro",
-    "dielectricConstant": 6.0,
-    "k_value": 1500000000
-  },
-  "etanol": {
-    "name": "Etanol",
-    "dielectricConstant": 24.0,
-    "k_value": 375000000
-  },
-  "agua": {
-    "name": "Água Pura",
-    "dielectricConstant": 80.0,
-    "k_value": 112500000
-  }
-}
 
 function aplicarModoLayoutViewport() {
   const viewport = window.visualViewport;
@@ -168,6 +141,25 @@ function ajustarCanvasAoLayout() {
 }
 
 // --- Eventos de UI ---
+// Preencher o seletor de meio no carregamento
+const materialSelect = document.getElementById('materialSelect');
+if (materialSelect) {
+  Object.keys(materiais).forEach(key => {
+    const option = document.createElement('option');
+    option.value = key;
+    option.textContent = materiais[key].name;
+    materialSelect.appendChild(option);
+  });
+  // Seleciona o padrão
+  materialSelect.value = materialSelecionado;
+
+  // Atualiza a constante quando o usuário muda de meio
+  materialSelect.addEventListener('change', e => {
+    materialSelecionado = e.target.value;
+    K_CONSTANT = materiais[materialSelecionado].k_value;
+  });
+}
+
 document.getElementById('addPos').addEventListener('click', () => {
   const novaCarga = new Carga({
     id: proximaCargaIndex++,
@@ -430,7 +422,7 @@ function calcularCampoEletrico(px, py) {
     let r = Math.sqrt(r2);
 
     // Magnitude do campo: E = k * q / r^2
-    let E = (k * carga.q) / r2;
+    let E = (K_CONSTANT * carga.q) / r2;
 
     // Decomposição vetorial (superposição)
     // dx/r é o cosseno do ângulo, dy/r é o seno do ângulo
@@ -552,7 +544,7 @@ function calcularDetalhesPotencial(px, py) {
     if (r < 5) r = 5;
 
     // V = k * q / r
-    const contribuicao = (k * carga.q) / r;
+    const contribuicao = (K_CONSTANT * carga.q) / r;
     V += contribuicao;
 
     termos.push({
@@ -592,7 +584,7 @@ function atualizarPainelPotencial() {
   const simbolica = `V = ${detalhes.termos.map((t, i) => `\\frac{k q_{${t.carga.id}}}{r_{${t.carga.id}}}`).join(' + ')}`;
 
   // 2) Substituindo k, q_i e r_i
-  const substituida = `V = ${detalhes.termos.map((t, i) => `\\frac{${k}\\cdot(${t.carga.q > 0 ? '+' : '-'}1)}{${formatarNumero(t.r, 1)}}`).join(' + ')}`;
+  const substituida = `V = ${detalhes.termos.map((t, i) => `\\frac{${K_CONSTANT}\\cdot(${t.carga.q > 0 ? '+' : '-'}1)}{${formatarNumero(t.r, 1)}}`).join(' + ')}`;
 
   // 3) Valores numéricos das contribuições
   const contribuicoes = `V \\approx ${detalhes.termos.map((t) => {
