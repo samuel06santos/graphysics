@@ -75,3 +75,21 @@ body.viewport-portrait #simCanvas {
   display: inline-block;
 }
 
+#ui::-webkit-scrollbar {
+  width: 6px;
+}
+
+#ui::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#ui::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 3px;
+}
+
+#ui {
+  scrollbar-width: thin;
+  scrollbar-color: #555 transparent;
+}
+
