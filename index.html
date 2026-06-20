@@ -65,9 +65,9 @@
 
         <div class="flex flex-col gap-2 gap-2">
             <h3>Controles</h3>
-            <label for="materialSelect" class="text-sm text-gray-400">Material entre as cargas:</label>
+            <label for="materialSelect" class="text-sm text-gray-400 ml-2">Material entre as cargas:</label>
             <select id="materialSelect" aria-label="select"
-                class="cursor-pointer flex justify-center items-center text-white text-center p-2 gap-2 border border-white rounded-xl bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                class="cursor-pointer flex justify-center items-center text-white text-center p-2 mb-4 gap-2 border border-white rounded-xl bg-indigo-600/30 hover:bg-indigo-700/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
             </select>
             <button id="addPos"
                 class="cursor-pointer flex justify-center items-center p-2 gap-2 border border-white rounded-xl bg-red-600 hover:bg-red-700">
@@ -89,31 +89,32 @@
         <div class="flex flex-col gap-2">
             <h3>Visualização</h3>
             <button id="toggleVectors"
-                class="cursor-pointer flex justify-center items-center p-2 gap-2 border border-white rounded-xl bg-slate-600 hover:bg-slate-700">
+                class="cursor-pointer flex justify-center items-center p-2 gap-2 border border-white rounded-xl bg-slate-600/40 hover:bg-slate-700/40">
                 <i class="fa-solid fa-arrow-up-long rotate-45"></i>
                 <span id="spanVetores">Vetores com opacidade</span>
             </button>
             <button id="toggleHeatmap"
-                class="cursor-pointer flex justify-center items-center p-2 gap-2 border border-white rounded-xl bg-fuchsia-600 hover:bg-fuchsia-700">
+                class="cursor-pointer flex justify-center items-center p-2 gap-2 border border-white rounded-xl bg-fuchsia-600/40 hover:bg-fuchsia-700/40">
                 <i class="fa-solid fa-fire"></i>
                 <span id="spanHeatmap">Desativar Mapa de Potencial</span>
             </button>
+            <button id="toggleSensor"
+                class="cursor-pointer flex justify-center items-center p-2 gap-2 border border-white rounded-xl bg-yellow-600/40 hover:bg-yellow-700/40">
+                <i class="fa-solid fa-gauge-high"></i>
+                <span id="spanMultimetro">Desativar Multímetro</span>
+            </button>
         </div>
 
-        <button id="toggleSensor"
-            class="cursor-pointer flex justify-center items-center p-2 gap-2 border border-white rounded-xl bg-yellow-600 hover:bg-yellow-700">
-            <i class="fa-solid fa-gauge-high"></i>
-            <span id="spanMultimetro">Desativar Multímetro</span>
-        </button>
 
         <footer class="flex flex-col text-center text-sm text-gray-400 mt-auto">
-            <span class="text-lg text-center">
+            <span>
+                GraPhysics &bullet;
               <a href="https://www.github.com/samuel06santos/" target="_blank" class="text-white-800 hover:underline hover:text-purple-300">
                 <i class="fa-brands fa-github"></i>
                 Samuel Santos
               </a>
+                &bullet; 2026
             </span>
-            &copy; 2026 &bullet; GraPhysics. Todos os direitos reservados.
         </footer>
     </div>
 
