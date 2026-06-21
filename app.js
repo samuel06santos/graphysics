@@ -6,6 +6,10 @@ const painel = document.getElementById('painelPotencial');
 const btnMoverCarga = document.getElementById('btnMoverCarga');
 const btnRemoverCarga = document.getElementById('btnRemoverCarga');
 
+const modalReferencias = document.getElementById('modalReferencias');
+const btnAbrirReferencias = document.getElementById('btnAbrirReferencias');
+const btnFecharReferencias = document.getElementById('btnFecharReferencias');
+
 class Carga {
   constructor({id, x, y, q}) {
     this.id = id;
@@ -56,6 +60,7 @@ const materiais = {
   "borracha": { name: "Borracha", dielectricConstant: 3.0, k_value: 3333.33 },
   "papel": { name: "Papel", dielectricConstant: 3.5, k_value: 2857.14 },
   "vidro": { name: "Vidro", dielectricConstant: 6.0, k_value: 1666.67 },
+  "silicio": { name: "Silício (Semicondutor)", dielectricConstant: 11.68, k_value: 856.16 },
   "etanol": { name: "Etanol", dielectricConstant: 24.0, k_value: 416.67 },
   "agua": { name: "Água Pura", dielectricConstant: 80.0, k_value: 125.0 }
 }
@@ -157,7 +162,24 @@ function ajustarCanvasAoLayout() {
 }
 
 // --- Eventos de UI ---
-// Preencher o seletor de meio no carregamento
+
+// Botão de abrir e fechar modal de referências
+if (btnAbrirReferencias && btnFecharReferencias && modalReferencias) {
+  btnAbrirReferencias.addEventListener('click', () => {
+      modalReferencias.classList.remove('hidden');
+  });
+
+  btnFecharReferencias.addEventListener('click', () => {
+      modalReferencias.classList.add('hidden');
+  });
+
+  // Fechar modal clicando fora da caixa
+  modalReferencias.addEventListener('click', (e) => {
+      if (e.target === modalReferencias) modalReferencias.classList.add('hidden');
+  });
+}
+
+// Preencher o seletor de meio material no carregamento
 const materialSelect = document.getElementById('materialSelect');
 if (materialSelect) {
   Object.keys(materiais).forEach(key => {

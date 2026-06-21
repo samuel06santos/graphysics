@@ -8,7 +8,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=add_circle,delete,do_not_disturb_on,toggle_on" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=add_circle,delete,do_not_disturb_on,toggle_on,menu_book,bolt,close,science" />
     <link rel="stylesheet" href="style.css">
     <!-- KaTeX for rendering LaTeX equations -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
@@ -63,11 +63,16 @@
             <h2 class="text-center text-lg text-gray-300">Simulador de Campos Elétricos</h2>
         </div>
 
+        <button id="btnAbrirReferencias" class="cursor-pointer text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors duration-300">
+            <i class="fa-solid fa-book text-white"></i>
+            Entenda a Física
+        </button>
+
         <div class="flex flex-col gap-2 gap-2">
             <h3>Controles</h3>
             <label for="materialSelect" class="text-sm text-gray-400 ml-2">Material entre as cargas:</label>
             <select id="materialSelect" aria-label="select"
-                class="cursor-pointer flex justify-center items-center text-white text-center p-2 mb-4 gap-2 border border-white rounded-xl bg-indigo-600/30 hover:bg-indigo-700/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                class="cursor-pointer flex justify-center items-center text-white text-center p-2 mb-4 gap-2 border border-white rounded-xl bg-indigo-600/30 hover:bg-indigo-700/30 focus:outline-none">
             </select>
             <button id="addPos"
                 class="cursor-pointer flex justify-center items-center p-2 gap-2 border border-white rounded-xl bg-red-600 hover:bg-red-700">
@@ -142,6 +147,144 @@
 
     <!-- Painel do potencial (renderização LaTeX) -->
     <div id="painelPotencial" class="hidden" aria-hidden="true"></div>
+    
+    <!-- Modal de referências -->
+    <div id="modalReferencias" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-slate-900 border-2 border-blue-500 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl select-text overflow-hidden">
+        
+            <div class="bg-slate-800 p-5 flex justify-between items-center border-b border-slate-700">
+                <h2 class="m-0 text-white text-2xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-book-journal-whills text-blue-400"></i> Documentação do Simulador
+                </h2>
+                <button id="btnFecharReferencias" class="cursor-pointer flex items-center justify-center text-white rounded-lg p-2 bg-red-500 hover:bg-red-600 transition ">
+                    <i class="fa-solid fa-xmark text-white"></i>
+                </button>
+            </div>
+
+            <div class="p-8 overflow-y-auto custom-scrollbar flex-grow text-slate-300 space-y-8">
+                
+                <section>
+                    <h3 class="text-blue-400 text-xl font-bold border-b border-slate-700 pb-2 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-screwdriver-wrench"></i> Como usar o simulador
+                    </h3>
+                    <p class="mb-4">Este ambiente virtual simula o comportamento de cargas elétricas em um campo eletrostático. Veja como interagir com a ferramenta:</p>
+                    <ul class="space-y-3 list-disc pl-5">
+                        <li><strong>Adicionar Cargas:</strong> Utilize os botões no painel de controle para instanciar cargas positivas em vermelho, e cargas negativas em azul no vácuo da área de simulação.</li>
+                        <li><strong>Manipulação (Drag & Drop):</strong> Clique e segure em qualquer partícula para arrastá-la pelo espaço. Os cálculos vetoriais e escalares são atualizados a cada frame da simulação.</li>
+                        <li><strong>Mapa de Calor (Potencial Elétrico - \(V\)):</strong> O fundo da tela representa a topografia da energia. Cores quentes (vermelho) indicam áreas de alto potencial positivo. Cores frias (azul) indicam vales de potencial negativo. Áreas escuras indicam potencial nulo (\(V = 0\)).</li>
+                        <li><strong>Grade Vetorial (Campo Elétrico - \(\vec{E}\)):</strong> As setas brancas mostram a direção e o sentido da força que uma carga de prova positiva sofreria naquele ponto. A intensidade é representada pela opacidade das setas.</li>
+                        <li><strong>Multímetro (Ponta de Prova):</strong> Transforme seu mouse em um sensor. Ele revelará os valores exatos do Potencial (em Volts) e da magnitude do Campo Elétrico (em V/m).</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="text-blue-400 text-xl font-bold border-b border-slate-700 pb-2 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-atom"></i> Fundamentos Físicos
+                    </h3>
+                    <p class="mb-4">A engine do simulador baseia-se no <strong>Princípio da Superposição</strong>. Para cada pixel na tela, o sistema realiza o somatório das contribuições individuais de cada partícula presente usando as seguintes leis:</p>
+                    
+                    <div class="bg-slate-800 p-5 rounded-lg border border-slate-700 space-y-4">
+                        <div>
+                            <strong class="text-white">Campo Elétrico (Vetor):</strong> A magnitude é ditada pela equação:
+                            <div class="text-center my-3 text-lg text-blue-300">
+                                $$|\vec{E}| = k \cdot \frac{|q|}{r^2}$$ 
+                            </div>
+                            O sistema decompõe os vetores em coordenadas \(X\) e \(Y\) para realizar a soma vetorial antes de traçar as linhas de campo. A unidade adotada para leitura é o <strong>V/m</strong> (Volts por metro), equivalente a N/C.
+                        </div>
+                        <hr class="border-slate-600">
+                        <div>
+                            <strong class="text-white">Potencial Elétrico (Escalar):</strong> Calculado pela soma algébrica:
+                            <div class="text-center my-3 text-lg text-red-300">
+                                $$V = \sum k \cdot \frac{q}{r}$$
+                            </div>
+                            Por ser uma grandeza escalar, potenciais gerados por cargas de sinais opostos podem se anular perfeitamente em pontos do espaço.
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3 class="text-blue-400 text-xl font-bold border-b border-slate-700 pb-2 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-table"></i> Tabela de Constantes Dielétricas
+                    </h3>
+                    <p class="mb-4">No vácuo, usamos \(k_0 = \frac{1}{4\pi\varepsilon_0}\). Em um material, a força cai proporcionalmente à <strong>permissividade relativa</strong> (\(\varepsilon_r\), ou \(\kappa\)).</p>
+                    <p class="mb-4">A permissividade relativa (\(\kappa\)) é uma medida da capacidade de um material de armazenar energia elétrica em um campo elétrico.</p>
+                    <p class="mb-4">Quanto maior o valor de \(\kappa\), mais o campo é atenuado dentro do material. Por exemplo, a água pura tem uma \(\kappa\) muito alta, o que significa que um campo elétrico aplicado através dela seria significativamente reduzido em comparação com o vácuo.</p>
+                    
+                    <div class="overflow-x-auto rounded-lg border border-slate-700">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-800 text-white">
+                                    <th class="p-3 border-b border-slate-700">Material (Meio)</th>
+                                    <th class="p-3 border-b border-slate-700 text-center">\(\kappa\) (a 20°C)</th>
+                                    <th class="p-3 border-b border-slate-700">Impacto no Campo (\(\vec{E}\))</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700 bg-slate-900/50">
+                                <tr class="hover:bg-slate-800/50 transition">
+                                    <td class="p-3 font-medium text-white">Vácuo (Referência)</td>
+                                    <td class="p-3 text-center">1.0</td>
+                                    <td class="p-3 text-green-400">Força máxima (100%)</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 transition">
+                                    <td class="p-3">Óleo</td>
+                                    <td class="p-3 text-center">2.2</td>
+                                    <td class="p-3 text-lime-400">Campo reduzido a 45.5%</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 transition">
+                                    <td class="p-3">Borracha</td>
+                                    <td class="p-3 text-center">3.0</td>
+                                    <td class="p-3 text-yellow-400">Campo reduzido a 33.3%</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 transition">
+                                    <td class="p-3">Papel</td>
+                                    <td class="p-3 text-center">3.5</td>
+                                    <td class="p-3 text-yellow-300">Campo reduzido a 28.6%</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 transition">
+                                    <td class="p-3">Vidro</td>
+                                    <td class="p-3 text-center">6.0</td>
+                                    <td class="p-3 text-yellow-200">Campo reduzido a 16.7%</td>
+                                </tr>                             
+                                <tr class="hover:bg-slate-800/50 transition">
+                                    <td class="p-3">Silício (Semicondutor)</td>
+                                    <td class="p-3 text-center">11.68</td>
+                                    <td class="p-3 text-red-400">Campo reduzido a 8.5%</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 transition">
+                                    <td class="p-3">Etanol</td>
+                                    <td class="p-3 text-center">24.0</td>
+                                    <td class="p-3 text-red-500">Campo reduzido a 4.2%</td>
+                                </tr>                                
+                                <tr class="hover:bg-slate-800/50 transition">
+                                    <td class="p-3">Água Pura</td>
+                                    <td class="p-3 text-center">80.1</td>
+                                    <td class="p-3 text-red-600">Atenuado fortemente (1.2%)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section>
+                    <h3 class="text-blue-400 text-xl font-bold border-b border-slate-700 pb-2 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-book-open"></i> Referências e Materiais de Estudo
+                    </h3>
+                    <ul class="space-y-3 list-disc pl-5">
+                        <li><strong>Livro-texto Oficial:</strong> <i>Fundamentos de Física, Vol. 3 (Eletromagnetismo)</i> - David Halliday, Robert Resnick & Jearl Walker. Capítulos 21, 22 e 24. Disponível em: <a href="https://www.eletrica.ufpr.br/armando/index_arquivos/FIsica%203%20Eletromagnetismo%20Halliday.pdf" target="_blank" class="text-amber-500 hover:underline">Engenharia Elétrica - UFPR</a></li>
+                        <li><strong>Videoaulas (YouTube):</strong>
+                            <ul class="list-circle pl-5 mt-2 space-y-1 text-slate-400">
+                                <li><a href="https://www.youtube.com/watch?v=T9G9UHZPl08" target="_blank" class="text-amber-500 hover:underline"><i class="fa-brands fa-youtube text-red-400 mr-2"></i>Campo e potencial elétrico - Entendendo o significado! - Professor Douglas Gomes</a>: Explicação e exemplos de campo elétrico e potencial elétrico.</li>
+                                <li><a href="https://www.youtube.com/watch?v=uuNm_BO-iEw" target="_blank" class="text-amber-500 hover:underline"><i class="fa-brands fa-youtube text-red-400 mr-2"></i>Em Física, o que é campo? Não é uma região do espaço! - Professor Douglas Gomes</a>: Explicação conceitual sobre campo em física.</li>
+                                <li><a href="https://www.youtube.com/watch?v=g5BhOVeT6JM&list=PLxI8Can9yAHdG8tw2QofrU02IuAEVyGlL&index=7" target="_blank" class="text-amber-500 hover:underline"><i class="fa-brands fa-youtube text-red-400 mr-2"></i>UNIVESP - Física Geral III</a>: Curso universitário completo.</li>
+                                <li><a href="https://www.youtube.com/playlist?list=PLf1lowbdbFIAm_891HSmYBQbY4utT0opn" target="_blank" class="text-amber-500 hover:underline"><i class="fa-brands fa-youtube text-red-400 mr-2"></i>Física - Eletrostática - Me Salva!</a>: Abordagem visual focada.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>

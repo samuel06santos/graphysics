@@ -75,20 +75,20 @@ body.viewport-portrait #simCanvas {
   display: inline-block;
 }
 
-#ui::-webkit-scrollbar {
+#ui::-webkit-scrollbar, #modalReferencias::-webkit-scrollbar {
   width: 6px;
 }
 
-#ui::-webkit-scrollbar-track {
+#ui::-webkit-scrollbar-track, #modalReferencias::-webkit-scrollbar-track {
   background: transparent;
 }
 
-#ui::-webkit-scrollbar-thumb {
+#ui::-webkit-scrollbar-thumb, #modalReferencias::-webkit-scrollbar-thumb {
   background-color: #555;
   border-radius: 3px;
 }
 
-#ui {
+#ui, #modalReferencias {
   scrollbar-width: thin;
   scrollbar-color: #555 transparent;
 }
