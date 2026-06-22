@@ -1,10 +1,14 @@
 const canvas = document.getElementById('simCanvas');
 const ctx = canvas.getContext('2d');
 const appRoot = document.getElementById('appRoot');
-const menuCarga = document.getElementById('menuCarga');
 const painel = document.getElementById('painelPotencial');
+
+const menuCarga = document.getElementById('menuCarga');
 const btnMoverCarga = document.getElementById('btnMoverCarga');
 const btnRemoverCarga = document.getElementById('btnRemoverCarga');
+const modalMoverCarga = document.getElementById('modalMoverCarga');
+const inputMoverX = document.getElementById('inputMoverX');
+const inputMoverY = document.getElementById('inputMoverY');
 
 const modalReferencias = document.getElementById('modalReferencias');
 const btnAbrirReferencias = document.getElementById('btnAbrirReferencias');
@@ -348,8 +352,8 @@ function abrirMenuCarga(clientX, clientY, indiceCarga) {
   document.getElementById('infoCargaContainer').classList.add(carga.q > 0 ? 'border-red-300' : 'border-blue-300');
   document.getElementById('labelCarga').innerHTML = `<div class="linha-equacao text-center">${katex.renderToString(`q_${carga.id}`, { throwOnError: false, displayMode: false })}</div>`;
   document.getElementById('infoCarga').textContent = `Carga: ${carga.q > 0 ? '+' : ''}${carga.q} Coulomb`;
-  document.getElementById('posicaoXCarga').textContent = `X: ${formatarCoordenada(xCargaGrade)} px`;
-  document.getElementById('posicaoYCarga').textContent = `Y: ${formatarCoordenada(yCargaGrade)} px`;
+  document.getElementById('posicaoXCarga').textContent = `X: ${(xCargaGrade * M_PER_PIXEL).toFixed(2)} m`;
+  document.getElementById('posicaoYCarga').textContent = `Y: ${(yCargaGrade * M_PER_PIXEL).toFixed(2)} m`;
   menuCarga.style.left = clientX + 'px';
   menuCarga.style.top = clientY + 'px';
   menuCarga.classList.remove('hidden');
@@ -443,22 +447,56 @@ document.addEventListener('click', (evt) => {
   }
 });
 
-// Mover carga para X e Y 
+// Função para fechar o modal de mover carga e limpar os inputs
+function fecharModalMover() {
+  modalMoverCarga.classList.add('hidden');
+  inputMoverX.value = '';
+  inputMoverY.value = '';
+}
+
+// Variável para armazenar o índice da carga que está sendo movida
+let indiceCargaParaMover = -1;
+
+// Abrir modal de mover carga ao clicar no botão do menu
 btnMoverCarga.addEventListener('click', () => {
   if (cargaMenuSelecionada !== -1 && cargaMenuSelecionada < cargas.length) {
-    let newX = parseFloat(prompt("Digite a nova coordenada X:"));
-    let newY = parseFloat(prompt("Digite a nova coordenada Y:"));
-    if (!isNaN(newX) && !isNaN(newY)) {
-      // traduz as coordenadas do grid para coordenadas do canvas
-      const origem = getGridOrigin();
-      const canvasX = Math.floor(origem.x + newX);
-      const canvasY = Math.floor(origem.y + newY);
-
-      cargas[cargaMenuSelecionada].x = canvasX;
-      cargas[cargaMenuSelecionada].y = canvasY;
-    }
+    indiceCargaParaMover = cargaMenuSelecionada; // salva antes de fechar o menu
+    const carga = cargas[cargaMenuSelecionada];
+    const grade = coordenadasDaGrade(carga.x, carga.y);
+    inputMoverX.value = (grade.x * M_PER_PIXEL).toFixed(2);
+    inputMoverY.value = (grade.y * M_PER_PIXEL).toFixed(2);
+    modalMoverCarga.classList.remove('hidden');
     fecharMenuCarga();
+    setTimeout(() => inputMoverX.focus(), 50);
   }
+});
+
+// Fechar modal de mover carga
+document.getElementById('btnFecharModalMover').addEventListener('click', fecharModalMover);
+
+// Fechar modal ao clicar fora da caixa
+modalMoverCarga.addEventListener('click', (e) => {
+  if (e.target === modalMoverCarga) fecharModalMover();
+});
+
+// Confirma nova posição da carga ao clicar no botão
+document.getElementById('btnConfirmarMover').addEventListener('click', () => {
+  const newX = parseFloat(inputMoverX.value);
+  const newY = parseFloat(inputMoverY.value);
+  if (!isNaN(newX) && !isNaN(newY) && indiceCargaParaMover !== -1) {
+    const origem = getGridOrigin();
+    cargas[indiceCargaParaMover].x = Math.floor(origem.x + newX * PIXELS_PER_METER);
+    cargas[indiceCargaParaMover].y = Math.floor(origem.y + newY * PIXELS_PER_METER);
+  }
+  indiceCargaParaMover = -1;
+  fecharModalMover();
+});
+
+// Confirma com Enter em qualquer input
+[inputMoverX, inputMoverY].forEach(input => {
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btnConfirmarMover').click();
+  });
 });
 
 // Remover carga ao clicar no botão do menu
@@ -470,6 +508,7 @@ btnRemoverCarga.addEventListener('click', () => {
   }
 });
 
+// Eventos de hover para o painel de potencial
 if (painel) {
   painel.addEventListener('mouseenter', () => {
     painelHover = true;
