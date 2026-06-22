@@ -68,6 +68,9 @@ let materialSelecionado = 'vacuo';
 let K_CONSTANT = materiais[materialSelecionado].k_value;
 let cargas = [];
 
+const PIXELS_PER_METER = 100; // 100 px = 1 m
+const M_PER_PIXEL   = 1 / PIXELS_PER_METER; // 0.01 m/px
+
 let usarMultimetro = true;
 let mostrarHeatmap = true;
 let mouseX = 0;
@@ -504,117 +507,28 @@ function calcularCampoEletrico(px, py) {
   let Ey = 0;
 
   for (let carga of cargas) {
-    let dx = px - carga.x;
-    let dy = py - carga.y;
-    let r2 = dx * dx + dy * dy;
+    // distâncias em metros
+    const dx_m = (px - carga.x) * M_PER_PIXEL;
+    const dy_m = (py - carga.y) * M_PER_PIXEL;
+    const r2   = dx_m * dx_m + dy_m * dy_m;
 
     // Evita divisão por zero ou campos infinitos se o ponto estiver no centro da carga
-    if (r2 < 100) continue;
+    if (r2 < 0.0001) continue;
 
     let r = Math.sqrt(r2);
 
     // Magnitude do campo: E = k * q / r^2
-    let E = (K_CONSTANT * carga.q) / r2;
+    const E = (K_CONSTANT * carga.q) / r2;   // r² já em metros²
 
     // Decomposição vetorial (superposição)
-    // dx/r é o cosseno do ângulo, dy/r é o seno do ângulo
-    Ex += E * (dx / r);
-    Ey += E * (dy / r);
+    // dx_m/r é o cosseno do ângulo, dy_m/r é o seno do ângulo
+    Ex += E * (dx_m / r);
+    Ey += E * (dy_m / r);
   }
 
   return { Ex, Ey };
 }
 
-// Desenha vetores apontando na direção do campo
-function desenharVetoresCampo(context) {
-  const espacamento = 30;
-  const tamanhoVetor = 15;
-
-  for (let x = 0; x < canvas.width; x += espacamento) {
-    for (let y = 0; y < canvas.height; y += espacamento) {
-
-      let campo = calcularCampoEletrico(x, y);
-
-      // Calcula a força total (magnitude) usando Pitágoras
-      let mag = Math.sqrt(campo.Ex * campo.Ex + campo.Ey * campo.Ey);
-
-      if (mag === 0) continue;
-
-       // Normaliza o vetor (descobre apenas a direção, ignorando a força original)
-       let nx = campo.Ex / mag;
-       let ny = campo.Ey / mag;
-
-       // Determina opacidade conforme modoVetores: 0 = natural, 1 = 100%, 2 = oculto
-       let opacidade;
-       if (modoVetores === 1) {
-         opacidade = 1;
-       } else {
-         opacidade = Math.min(mag / 5, 0.8);
-       }
-
-       context.beginPath();
-       context.moveTo(x, y);
-       context.lineTo(x + nx * tamanhoVetor, y + ny * tamanhoVetor);
-       context.strokeStyle = `rgba(255, 255, 255, ${opacidade})`;
-       context.lineWidth = 1.5;
-       context.stroke();
-
-       // seta para mostrar o sentido
-       context.beginPath();
-       context.arc(x + nx * tamanhoVetor, y + ny * tamanhoVetor, 1.5, 0, Math.PI * 2);
-       context.fillStyle = `rgba(255, 255, 255, ${opacidade})`;
-       context.fill();
-    }
-  }
-}
-
-function desenharGrade(context) {
-  const origem = getGridOrigin();
-
-  context.save();
-  context.font = '11px monospace';
-  context.fillStyle = 'rgba(255, 255, 255, 0.55)';
-
-  for (let offset = -Math.ceil(origem.x / GRID_SPACING) * GRID_SPACING; offset <= canvas.width; offset += GRID_SPACING) {
-    const x = origem.x + offset;
-    const isMajor = offset % GRID_MAJOR_SPACING === 0;
-    const isAxis = offset === 0;
-
-    context.beginPath();
-    context.strokeStyle = isAxis ? 'rgba(255, 255, 255, 0.28)' : isMajor ? 'rgba(255, 255, 255, 0.16)' : 'rgba(255, 255, 255, 0.08)';
-    context.lineWidth = isAxis ? 1.4 : isMajor ? 1.1 : 0.8;
-    context.moveTo(x, 0);
-    context.lineTo(x, canvas.height);
-    context.stroke();
-
-    if (isMajor || isAxis) {
-      context.textAlign = 'center';
-      context.textBaseline = 'top';
-      context.fillText(formatarCoordenada(offset), x, 4);
-    }
-  }
-
-  for (let offset = -Math.ceil(origem.y / GRID_SPACING) * GRID_SPACING; offset <= canvas.height; offset += GRID_SPACING) {
-    const y = origem.y + offset;
-    const isMajor = offset % GRID_MAJOR_SPACING === 0;
-    const isAxis = offset === 0;
-
-    context.beginPath();
-    context.strokeStyle = isAxis ? 'rgba(255, 255, 255, 0.28)' : isMajor ? 'rgba(255, 255, 255, 0.16)' : 'rgba(255, 255, 255, 0.08)';
-    context.lineWidth = isAxis ? 1.4 : isMajor ? 1.1 : 0.8;
-    context.moveTo(0, y);
-    context.lineTo(canvas.width, y);
-    context.stroke();
-
-    if (isMajor || isAxis) {
-      context.textAlign = 'left';
-      context.textBaseline = 'middle';
-      context.fillText(formatarCoordenada(offset), 6, y);
-    }
-  }
-
-  context.restore();
-}
 
 
 /**
@@ -650,12 +564,13 @@ function calcularDetalhesPotencial(px, py) {
   const termos = [];
   
   cargas.forEach((carga, indice) => {
-    let dx = px - carga.x;
-    let dy = py - carga.y;
-    let r = Math.sqrt(dx * dx + dy * dy);
+    // distâncias em metros
+    let dx_m = (px - carga.x) * M_PER_PIXEL;
+    let dy_m = (py - carga.y) * M_PER_PIXEL;
+    let r = Math.sqrt(dx_m * dx_m + dy_m * dy_m);
     
     // Se estivermos exatamente no centro da carga, o V tenderia ao infinito.
-    if (r < 5) r = 5;
+    if (r < 0.05) r = 0.05;      // 5 cm  0.05 m
     
     // V = k * q / r
     const contribuicao = (K_CONSTANT * carga.q) / r;
@@ -709,7 +624,7 @@ function atualizarPainelPotencial() {
   
 
   // 4) Valor total
-  const total = `V \\approx ${formatarNumero(detalhes.V, 1)}\\ {Volts}`;
+  const total = `V \\approx ${formatarNumero(detalhes.V, 1)}\\ \\text{Volts}`;
 
   // Monta o HTML com KaTeX (renderToString)
   let html = '';
@@ -729,10 +644,101 @@ function atualizarPainelPotencial() {
   painel.classList.remove('hidden');
 }
 
+function desenharGrade(context) {
+  const origem = getGridOrigin();
+
+  context.save();
+  context.font = '11px monospace';
+  context.fillStyle = 'rgba(255, 255, 255, 0.55)';
+
+  for (let offset = -Math.ceil(origem.x / GRID_SPACING) * GRID_SPACING; offset <= canvas.width; offset += GRID_SPACING) {
+    const x = origem.x + offset;
+    const isMajor = offset % GRID_MAJOR_SPACING === 0;
+    const isAxis = offset === 0;
+
+    context.beginPath();
+    context.strokeStyle = isAxis ? 'rgba(255, 255, 255, 0.28)' : isMajor ? 'rgba(255, 255, 255, 0.16)' : 'rgba(255, 255, 255, 0.08)';
+    context.lineWidth = isAxis ? 1.4 : isMajor ? 1.1 : 0.8;
+    context.moveTo(x, 0);
+    context.lineTo(x, canvas.height);
+    context.stroke();
+
+    if (isMajor || isAxis) {
+      context.textAlign = 'center';
+      context.textBaseline = 'top';
+      context.fillText(`${formatarCoordenada(offset / PIXELS_PER_METER)}m`, x, 4);
+    }
+  }
+
+  for (let offset = -Math.ceil(origem.y / GRID_SPACING) * GRID_SPACING; offset <= canvas.height; offset += GRID_SPACING) {
+    const y = origem.y + offset;
+    const isMajor = offset % GRID_MAJOR_SPACING === 0;
+    const isAxis = offset === 0;
+
+    context.beginPath();
+    context.strokeStyle = isAxis ? 'rgba(255, 255, 255, 0.28)' : isMajor ? 'rgba(255, 255, 255, 0.16)' : 'rgba(255, 255, 255, 0.08)';
+    context.lineWidth = isAxis ? 1.4 : isMajor ? 1.1 : 0.8;
+    context.moveTo(0, y);
+    context.lineTo(canvas.width, y);
+    context.stroke();
+
+    if (isMajor || isAxis) {
+      context.textAlign = 'left';
+      context.textBaseline = 'middle';
+      context.fillText(`${formatarCoordenada(offset / PIXELS_PER_METER)}m`, 6, y);
+    }
+  }
+
+  context.restore();
+}
+
+// Desenha vetores apontando na direção do campo
+function desenharVetoresCampo(context) {
+  const espacamento = 30;
+  const tamanhoVetor = 15;
+
+  for (let x = 0; x < canvas.width; x += espacamento) {
+    for (let y = 0; y < canvas.height; y += espacamento) {
+
+      let campo = calcularCampoEletrico(x, y);
+
+      // Calcula a força total (magnitude) usando Pitágoras
+      let mag = Math.sqrt(campo.Ex * campo.Ex + campo.Ey * campo.Ey);
+
+      if (mag === 0) continue;
+
+      // Normaliza o vetor (descobre apenas a direção, ignorando a força original)
+      let nx = campo.Ex / mag;
+      let ny = campo.Ey / mag;
+
+      // Determina opacidade conforme modoVetores: 0 = natural, 1 = 100%, 2 = oculto
+      let opacidade;
+      if (modoVetores === 1) {
+        opacidade = 1;
+      } else {
+        opacidade = Math.min(mag / 50000, 0.8);
+      }
+
+      context.beginPath();
+      context.moveTo(x, y);
+      context.lineTo(x + nx * tamanhoVetor, y + ny * tamanhoVetor);
+      context.strokeStyle = `rgba(255, 255, 255, ${opacidade})`;
+      context.lineWidth = 1.5;
+      context.stroke();
+
+      // seta para mostrar o sentido
+      context.beginPath();
+      context.arc(x + nx * tamanhoVetor, y + ny * tamanhoVetor, 1.5, 0, Math.PI * 2);
+      context.fillStyle = `rgba(255, 255, 255, ${opacidade})`;
+      context.fill();
+    }
+  }
+}
+
 // Pinta o fundo do Canvas baseado no Potencial
 function desenharHeatmap(context) {
   const tamanhoBloco = 3;
-  const limiteV = 800; // 1000
+  const limiteV = 80000; // Valor de potencial para saturar as cores
 
   // Varre a tela pulando de bloco em bloco
   for (let x = 0; x < canvas.width; x += tamanhoBloco) {
@@ -773,8 +779,8 @@ function desenharMultimetro(context) {
 
   let textoV = `V: ${V.toFixed(1)} Volts`;
   let textoE = `|E|: ${magE.toFixed(1)} V/m`;
-  let textoX = `X: ${formatarCoordenada(grade.x)} px`;
-  let textoY = `Y: ${formatarCoordenada(grade.y)} px`;
+  let textoX = `X: ${(grade.x * M_PER_PIXEL).toFixed(2)} m`;
+  let textoY = `Y: ${(grade.y * M_PER_PIXEL).toFixed(2)} m`;
 
   const caixaX = Math.max(12, Math.min(mouseX + 15, canvas.width - 200));
   const caixaY = Math.max(12, Math.min(mouseY - 45, canvas.height - 82));
@@ -809,8 +815,8 @@ function desenharRastreadorMouse(context) {
 
   const grade = coordenadasDaGrade(mouseX, mouseY);
   const linhas = [
-    `X: ${formatarCoordenada(grade.x)} px`,
-    `Y: ${formatarCoordenada(grade.y)} px`,
+    `X: ${(grade.x * M_PER_PIXEL).toFixed(2)} m`,
+    `Y: ${(grade.y * M_PER_PIXEL).toFixed(2)} m`,
   ];
 
   context.save();
