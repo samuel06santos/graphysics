@@ -521,6 +521,13 @@ if (painel) {
   });
 }
 
+// Converte números para notação científica adequada ao KaTeX
+function sciString(num, precision = 2) {
+  const expStr = num.toExponential(precision);   // e.g. "-1.23e+05"
+  const [mantissa, exponent] = expStr.split('e');
+  return `${mantissa}\\times10^${parseInt(exponent,10)}`;
+}
+
 
 /**
  * Calcula o vetor resultante do Campo Elétrico (Ex, Ey) em um ponto (px, py)
@@ -650,20 +657,20 @@ function atualizarPainelPotencial() {
   }
 
   // 1) Expressão simbólica: V = \sum k q_i / r_i
-  const simbolica = `V = ${detalhes.termos.map((t, i) => `\\frac{k q_{${t.carga.id}}}{r_{${t.carga.id}}}`).join(' + ')}`;
+  const simbolica = `V = k \\sum_{i=1}^{n} \\frac{q_i}{r_i} = ${detalhes.termos.map((t, i) => `\\frac{k q_{${t.carga.id}}}{r_{${t.carga.id}}}`).join(' + ')}`;
 
   // 2) Substituindo k, q_i e r_i
-  const substituida = `V = ${detalhes.termos.map((t, i) => `\\frac{${K_CONSTANT}\\cdot(${t.carga.q > 0 ? '+' : '-'}1)}{${formatarNumero(t.r, 1)}}`).join(' + ')}`;
+  const substituida = `V = ${detalhes.termos.map((t, i) => `\\frac{${sciString(K_CONSTANT)}\\cdot(${t.carga.q > 0 ? '+' : '-'}1)}{${formatarNumero(t.r, 3)}}`).join(' + ')}`;
 
   // 3) Valores numéricos das contribuições
   const contribuicoes = `V \\approx ${detalhes.termos.map((t) => {
-    const valorFormatado = formatarNumero(t.contribuicao, 1);
+    const valorFormatado = sciString(t.contribuicao);
     return (t.contribuicao < 0) ? `(${valorFormatado})` : `${valorFormatado}`;
   }).join(' + ')}`;
   
 
   // 4) Valor total
-  const total = `V \\approx ${formatarNumero(detalhes.V, 1)}\\ \\text{Volts}`;
+  const total = `V \\approx ${sciString(detalhes.V)}\\text{ Volts}`;
 
   // Monta o HTML com KaTeX (renderToString)
   let html = '';
@@ -816,8 +823,8 @@ function desenharMultimetro(context) {
   // Calcula a magnitude do campo elétrico usando Pitágoras (|E| = sqrt(Ex^2 + Ey^2))
   let magE = Math.sqrt(campo.Ex * campo.Ex + campo.Ey * campo.Ey);
 
-  let textoV = `V: ${V.toFixed(1)} Volts`;
-  let textoE = `|E|: ${magE.toFixed(1)} V/m`;
+  let textoV = `V: ${V.toExponential(2)} Volts`;
+  let textoE = `|E|: ${magE.toExponential(2)} V/m`;
   let textoX = `X: ${(grade.x * M_PER_PIXEL).toFixed(2)} m`;
   let textoY = `Y: ${(grade.y * M_PER_PIXEL).toFixed(2)} m`;
 
