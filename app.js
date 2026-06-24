@@ -59,14 +59,14 @@ class Carga {
 
 // Constante eletrostática
 const materiais = {
-  "vacuo": { name: "Vácuo / Ar", dielectricConstant: 1.0, k_value: 10000.0 },
-  "oleo": { name: "Óleo", dielectricConstant: 2.2, k_value: 4545.45 },
-  "borracha": { name: "Borracha", dielectricConstant: 3.0, k_value: 3333.33 },
-  "papel": { name: "Papel", dielectricConstant: 3.5, k_value: 2857.14 },
-  "vidro": { name: "Vidro", dielectricConstant: 6.0, k_value: 1666.67 },
-  "silicio": { name: "Silício (Semicondutor)", dielectricConstant: 11.68, k_value: 856.16 },
-  "etanol": { name: "Etanol", dielectricConstant: 24.0, k_value: 416.67 },
-  "agua": { name: "Água Pura", dielectricConstant: 80.0, k_value: 125.0 }
+  "vacuo": { name: "Vácuo / Ar", dielectricConstant: 1.0, k_value: 9000000000 },
+  "oleo": { name: "Óleo", dielectricConstant: 2.2, k_value: 4090909090 },
+  "borracha": { name: "Borracha", dielectricConstant: 3.0, k_value: 3000000000 },
+  "papel": { name: "Papel", dielectricConstant: 3.5, k_value: 2571428571 },
+  "vidro": { name: "Vidro", dielectricConstant: 6.0, k_value: 1500000000 },
+  "silicio": { name: "Silício (Semicondutor)", dielectricConstant: 11.68, k_value: 771232876 },
+  "etanol": { name: "Etanol", dielectricConstant: 24.0, k_value: 375000000 },
+  "agua": { name: "Água Pura", dielectricConstant: 80.0, k_value: 112500000 }
 }
 let materialSelecionado = 'vacuo';
 let K_CONSTANT = materiais[materialSelecionado].k_value;
@@ -762,7 +762,7 @@ function desenharVetoresCampo(context) {
       if (modoVetores === 1) {
         opacidade = 1;
       } else {
-        opacidade = Math.min(mag / 50000, 0.8);
+        opacidade = Math.min(mag / 50000000000, 0.8);
       }
 
       context.beginPath();
@@ -784,7 +784,7 @@ function desenharVetoresCampo(context) {
 // Pinta o fundo do Canvas baseado no Potencial
 function desenharHeatmap(context) {
   const tamanhoBloco = 3;
-  const limiteV = 80000; // Valor de potencial para saturar as cores
+  const limiteV = 72000000000; // Valor de potencial para saturar as cores
 
   // Varre a tela pulando de bloco em bloco
   for (let x = 0; x < canvas.width; x += tamanhoBloco) {
