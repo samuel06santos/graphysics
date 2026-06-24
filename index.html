@@ -17,7 +17,7 @@
 
     <!-- SEO -->
     <meta name="description" content="GraPhysics é um simulador interativo de campos elétricos para a web, que combina computação gráfica em canvas HTML5 com física realista em JavaScript. Crie e remova cargas pontuais, visualize vetores do campo elétrico, exiba mapas de potencial (heatmap) e meça valores locais com um multímetro virtual. Ideal para estudantes e professores de Física, o simulador oferece uma experiência didática, responsiva e totalmente livre de plugins." />
-    <meta name="keywords" content="simulador de campos elétricos, visualização física na web, JavaScript e Canvas, KaTeX, Tailwind CSS, Font Awesome, ferramenta didática de eletrostática, multímetro virtual, heatmap potencial, GraPhysics" />
+    <meta name="keywords" content="simulador de campos elétricos e potencial elétrico, visualização física na web, JavaScript e Canvas, KaTeX, Tailwind CSS, Font Awesome, ferramenta didática de eletrostática, multímetro virtual, heatmap potencial, GraPhysics" />
 
     <script type="application/ld+json">
     {
@@ -51,7 +51,7 @@
     }
     </script>
 
-    <title>Simulador de Campos Elétricos &bullet; GraPhysics</title>
+    <title>Simulador de Campos Elétricos e Potencial Elétrico &bullet; GraPhysics</title>
 </head>
 <body id="appRoot" class="flex flex-col md:flex-row m-0 text-white font-sans bg-[#1e1e1e] h-[100dvh] overflow-hidden relative">
     <div id="ui"
@@ -60,7 +60,7 @@
         <div class="gap-2 select-text">
             <img src="./public/images/graphysics-logo.png" alt="logo" class="w-16 h-16 mx-auto">
             <h1 class="text-center text-4xl font-bold text-white">GraPhysics</h1>
-            <h2 class="text-center text-lg text-gray-300">Simulador de Campos Elétricos</h2>
+            <h2 class="text-center text-lg text-gray-300">Simulador de Campos Elétricos e Potencial Elétrico</h2>
         </div>
 
         <button id="btnAbrirReferencias" class="cursor-pointer text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors duration-300">
@@ -216,9 +216,10 @@
                     <ul class="space-y-3 list-disc pl-5">
                         <li><strong>Adicionar Cargas:</strong> Utilize os botões no painel de controle para instanciar cargas positivas em vermelho, e cargas negativas em azul no vácuo da área de simulação.</li>
                         <li><strong>Manipulação (Drag & Drop):</strong> Clique e segure em qualquer partícula para arrastá-la pelo espaço. Os cálculos vetoriais e escalares são atualizados a cada frame da simulação.</li>
+                        <li><strong>Menu da Carga:</strong> Clique com o botão direito em qualquer carga para abrir o menu de propriedades e configurações, podendo modificar mover e remover a partícula.</li>
                         <li><strong>Mapa de Calor (Potencial Elétrico - \(V\)):</strong> O fundo da tela representa a topografia da energia. Cores quentes (vermelho) indicam áreas de alto potencial positivo. Cores frias (azul) indicam vales de potencial negativo. Áreas escuras indicam potencial nulo (\(V = 0\)).</li>
                         <li><strong>Grade Vetorial (Campo Elétrico - \(\vec{E}\)):</strong> As setas brancas mostram a direção e o sentido da força que uma carga de prova positiva sofreria naquele ponto. A intensidade é representada pela opacidade das setas.</li>
-                        <li><strong>Multímetro (Ponta de Prova):</strong> Transforme seu mouse em um sensor. Ele revelará os valores exatos do Potencial (em Volts) e da magnitude do Campo Elétrico (em V/m).</li>
+                        <li><strong>Multímetro (Ponta de Prova):</strong> Transforme seu mouse em um sensor. Ele revelará os valores exatos do Potencial (em Volts) e da magnitude do Campo Elétrico (em V/m), assim como as coordenadas do ponto onde o sensor está localizado.</li>
                     </ul>
                 </section>
 
@@ -230,19 +231,35 @@
                     
                     <div class="bg-slate-800 p-5 rounded-lg border border-slate-700 space-y-4">
                         <div>
-                            <strong class="text-white">Campo Elétrico (Vetor):</strong> A magnitude é ditada pela equação:
-                            <div class="text-center my-3 text-lg text-blue-300">
-                                $$|\vec{E}| = k \cdot \frac{|q|}{r^2}$$ 
+                            <strong class="text-white">Potencial Elétrico (Escalar):</strong> Calculado pela soma algébrica:
+                            <div class="text-center my-3 text-lg text-red-300">
+                                $$V = k \sum_{i=1}^{n} \frac{q_i}{r_i}$$
                             </div>
-                            O sistema decompõe os vetores em coordenadas \(X\) e \(Y\) para realizar a soma vetorial antes de traçar as linhas de campo. A unidade adotada para leitura é o <strong>V/m</strong> (Volts por metro), equivalente a N/C.
+                            <span class="text-sm">Onde:</span>
+                            <ul class="list-disc pl-5 text-sm">
+                                <li>\(V\): Potencial elétrico total no ponto \(Volts\).</li>
+                                <li>\(k\) é a constante eletrostática do meio (no vácuo, \(k_0 \approx 9 \times 10^9 \, N·m²/C²\))</li>
+                                <li>\(q_i\) Valor da i-ésima carga (incluindo o sinal positivo ou negativo, pois o potencial é uma grandeza escalar) \(em Coulombs\) \(C\)\.</li>
+                                <li>\(r_i\) Distância entre a i-ésima carga e o ponto onde o potencial está sendo calculado (em metros) \(m\)\.</li>
+                            </ul>
+                            Por ser uma grandeza escalar, potenciais gerados por cargas de sinais opostos podem se anular perfeitamente em pontos do espaço.
                         </div>
                         <hr class="border-slate-600">
                         <div>
-                            <strong class="text-white">Potencial Elétrico (Escalar):</strong> Calculado pela soma algébrica:
-                            <div class="text-center my-3 text-lg text-red-300">
-                                $$V = \sum k \cdot \frac{q}{r}$$
+                            <strong class="text-white">Campo Elétrico (Vetor):</strong> A magnitude é ditada pela equação:
+                            <div class="text-center my-3 text-lg text-blue-300">
+                                $$\vec{E}_{total} = \sum_{i=1}^{n} \vec{E}_i = \sum_{i=1}^{n} \left( k \frac{q_i}{r_i^2} \hat{r}_i \right)$$
                             </div>
-                            Por ser uma grandeza escalar, potenciais gerados por cargas de sinais opostos podem se anular perfeitamente em pontos do espaço.
+                            <span class="text-sm">Onde:</span>
+                            <ul class="list-disc pl-5 text-sm">
+                                <li>\(\vec{E}_{total}\): Campo elétrico total no ponto \(V/m\).</li>
+                                <li>\(\vec{E}_i\): Campo elétrico gerado pela i-ésima carga \(V/m\).</li>
+                                <li>\(k\) é a constante eletrostática do meio (no vácuo, \(k_0 \approx 9 \times 10^9 \, N·m²/C²\))</li>
+                                <li>\(q_i\) Valor da i-ésima carga (incluindo o sinal positivo ou negativo) \(em Coulombs\) \(C\)\.</li>
+                                <li>\(r_i\) Distância entre a i-ésima carga e o ponto onde o campo está sendo calculado (em metros) \(m\)\.</li>
+                                <li>\(\hat{r}_i\) Vetor unitário apontando da i-ésima carga para o ponto onde o campo está sendo calculado.</li>
+                            </ul>
+                            O sistema decompõe os vetores em coordenadas \(X\) e \(Y\) para realizar a soma vetorial antes de traçar as linhas de campo. A unidade adotada para leitura é o <strong>V/m</strong> (Volts por metro), equivalente a N/C.
                         </div>
                     </div>
                 </section>
